@@ -11,7 +11,10 @@ RUN npm ci --omit=dev
 
 # Production runner image
 FROM base AS runner
+
 ENV NODE_ENV=production
+ENV NODE_PATH=/app/backend/node_modules
+
 WORKDIR /app/backend
 
 # Copy backend dependencies
