@@ -1,0 +1,45 @@
+{
+  "name": "joineazy-backend",
+  "version": "1.0.0",
+  "description": "Joineazy Task 1 - Backend API (Phase 1 Foundation)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "db:test": "node ../database/test-connection.js",
+    "db:migrate": "node ../database/migrate.js",
+    "db:seed": "node ../database/seed.js",
+    "db:verify": "node ../database/verify-schema.js",
+    "auth:test": "node ../database/test-auth.js",
+    "group:test": "node ../database/test-groups.js",
+    "assignment:test": "node ../database/test-assignments.js",
+    "submission:test": "node ../database/test-submissions.js",
+    "progress:test": "node ../database/test-progress.js",
+    "analytics:test": "node ../database/test-analytics.js",
+    "hardening:test": "node ../database/test-phase9-hardening.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.0",
+    "pg": "^8.13.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "express",
+    "postgresql",
+    "joineazy",
+    "rest-api"
+  ],
+  "author": "Madugu Shiva Kumar",
+  "license": "ISC"
+}

@@ -1,0 +1,47 @@
+{
+  "name": "joineazy-task-1",
+  "version": "1.0.0",
+  "description": "Joineazy Task 1 - Full Stack Student, Group & Assignment Management System (Phase 1 Foundation)",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install",
+    "build": "npm --prefix frontend run build",
+    "db:test": "npm --prefix backend run db:test",
+    "db:migrate": "node database/migrate.js",
+    "db:seed": "node database/seed.js",
+    "db:verify": "node database/verify-schema.js",
+    "auth:test": "node database/test-auth.js",
+    "group:test": "node database/test-groups.js",
+    "assignment:test": "node database/test-assignments.js",
+    "submission:test": "node database/test-submissions.js",
+    "progress:test": "node database/test-progress.js",
+    "analytics:test": "node database/test-analytics.js",
+    "hardening:test": "node database/test-phase9-hardening.js",
+    "test:all": "node database/test-auth.js && node database/test-groups.js && node database/test-assignments.js && node database/test-submissions.js && node database/test-progress.js && node database/test-analytics.js && node database/test-phase9-hardening.js",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "keywords": [
+    "joineazy",
+    "management-system",
+    "react",
+    "express",
+    "postgresql",
+    "docker",
+    "tailwind"
+  ],
+  "author": "Madugu Shiva Kumar",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "dotenv": "^17.4.2",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.23.0"
+  }
+}
