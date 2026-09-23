@@ -20,7 +20,9 @@
     "progress:test": "node database/test-progress.js",
     "analytics:test": "node database/test-analytics.js",
     "hardening:test": "node database/test-phase9-hardening.js",
-    "test:all": "node database/test-auth.js && node database/test-groups.js && node database/test-assignments.js && node database/test-submissions.js && node database/test-progress.js && node database/test-analytics.js && node database/test-phase9-hardening.js",
+    "round2:test": "node database/test-round2-courses-leader-ack.js",
+    "crud:test": "node database/test-professor-crud-lifecycle.js",
+    "test:all": "node database/test-auth.js && node database/test-groups.js && node database/test-assignments.js && node database/test-submissions.js && node database/test-progress.js && node database/test-analytics.js && node database/test-phase9-hardening.js && node database/test-round2-courses-leader-ack.js && node database/test-professor-crud-lifecycle.js",
     "docker:up": "docker compose up --build",
     "docker:down": "docker compose down"
   },

@@ -2,7 +2,7 @@ import api from './api';
 
 export const submissionService = {
   /**
-   * Get coursework allocated to groups that the student belongs to,
+   * Get coursework allocated to groups or student,
    * including submission status and confirmation details
    */
   async getStudentAssignments() {
@@ -24,8 +24,65 @@ export const submissionService = {
   },
 
   /**
-   * Confirm assignment submission on behalf of the project group
-   * Dispatches the 2-step verified confirmation payload
+   * Submit assignment coursework (Individual or Group)
+   * @param {string} assignmentId
+   * @param {object} data - { groupId, submissionLink, submissionText }
+   */
+  async submitAssignment(assignmentId, data = {}) {
+    const response = await api.post(`/assignments/${assignmentId}/submit`, {
+      group_id: data.groupId || null,
+      submission_link: data.submissionLink || '',
+      submission_text: data.submissionText || '',
+    });
+    return response.data;
+  },
+
+  /**
+   * Acknowledge group or individual submission.
+   * NOTE: For group assignments, ONLY group leader is authorized!
+   * @param {string} assignmentId
+   * @param {string} [groupId]
+   */
+  async acknowledgeAssignment(assignmentId, groupId = null) {
+    const response = await api.post(`/assignments/${assignmentId}/acknowledge`, {
+      group_id: groupId || null,
+    });
+    return response.data;
+  },
+
+  /**
+   * Query status for assignment (checks acknowledgment, submission, isGroupLeader)
+   * @param {string} assignmentId
+   * @param {string} [groupId]
+   */
+  async getStatus(assignmentId, groupId = null) {
+    const url = groupId
+      ? `/assignments/${assignmentId}/status?groupId=${encodeURIComponent(groupId)}`
+      : `/assignments/${assignmentId}/status`;
+    const response = await api.get(url);
+    return response.data;
+  },
+
+  /**
+   * View all submissions for an assignment (Professor / Admin)
+   * @param {string} assignmentId
+   */
+  async getSubmissionsForAssignment(assignmentId) {
+    const response = await api.get(`/assignments/${assignmentId}/submissions`);
+    return response.data;
+  },
+
+  /**
+   * View progress breakdown for an assignment
+   * @param {string} assignmentId
+   */
+  async getAssignmentProgress(assignmentId) {
+    const response = await api.get(`/assignments/${assignmentId}/progress`);
+    return response.data;
+  },
+
+  /**
+   * Legacy Round 1 2-step submission confirmation
    * @param {string} assignmentId
    * @param {string} groupId
    */
@@ -38,7 +95,7 @@ export const submissionService = {
   },
 
   /**
-   * Query submission status for an assignment and group
+   * Legacy Round 1 query submission status
    * @param {string} assignmentId
    * @param {string} groupId
    */

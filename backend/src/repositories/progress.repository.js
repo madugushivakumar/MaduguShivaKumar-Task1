@@ -286,7 +286,11 @@ class ProgressRepository {
         (s.confirmed_by = u.id) AS is_confirmer,
         s.confirmed_by,
         confirmer.name AS confirmed_by_name,
-        s.confirmed_at
+        s.confirmed_at,
+        COALESCE(s.is_acknowledged, false) AS is_acknowledged,
+        (s.acknowledged_by = u.id) AS is_acknowledger,
+        acknowledger.name AS acknowledged_by_name,
+        s.acknowledged_at
       FROM assignment_groups ag
       JOIN assignments a ON ag.assignment_id = a.id
       JOIN groups g ON ag.group_id = g.id
@@ -294,6 +298,7 @@ class ProgressRepository {
       JOIN users u ON gm.student_id = u.id
       LEFT JOIN submissions s ON ag.assignment_id = s.assignment_id AND ag.group_id = s.group_id
       LEFT JOIN users confirmer ON s.confirmed_by = confirmer.id
+      LEFT JOIN users acknowledger ON s.acknowledged_by = acknowledger.id
       WHERE ($1::uuid IS NULL OR a.id = $1::uuid)
         AND ($2::uuid IS NULL OR g.id = $2::uuid)
         AND ($3::text IS NULL OR (
@@ -321,6 +326,10 @@ class ProgressRepository {
       isConfirmer: Boolean(row.is_confirmer),
       confirmedByName: row.confirmed_by_name || null,
       confirmedAt: row.confirmed_at || null,
+      isAcknowledged: Boolean(row.is_acknowledged),
+      isAcknowledger: Boolean(row.is_acknowledger),
+      acknowledgedByName: row.acknowledged_by_name || null,
+      acknowledgedAt: row.acknowledged_at || null,
     }));
   }
 }

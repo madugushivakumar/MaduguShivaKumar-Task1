@@ -1,3 +1,4 @@
+const { query } = require('../config/db.config');
 const assignmentRepository = require('../repositories/assignment.repository');
 const { ApiError } = require('../utils/apiError');
 const { HTTP_STATUS } = require('../constants/httpStatusCodes');
@@ -12,7 +13,18 @@ class AssignmentService {
    * @returns {Promise<object>}
    */
   async createAssignment(adminId, payload) {
-    const { title, description, dueDate, onedriveLink, groupIds, assignAll } = payload;
+    const {
+      title,
+      description,
+      dueDate,
+      onedriveLink,
+      courseId,
+      course_id,
+      submissionType,
+      submission_type,
+      groupIds,
+      assignAll,
+    } = payload;
 
     const assignment = await assignmentRepository.createWithTransaction({
       title,
@@ -20,6 +32,8 @@ class AssignmentService {
       dueDate,
       onedriveLink,
       createdBy: adminId,
+      courseId: courseId || course_id || null,
+      submissionType: submissionType || submission_type || 'GROUP',
       groupIds,
       assignAll,
     });
@@ -43,14 +57,14 @@ class AssignmentService {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Assignment not found.');
     }
 
-    // If a student is viewing, verify they are in one of the assigned groups
+    // If a student is viewing, verify they are authorized (enrolled in course or assigned in group)
     if (user && user.role === 'STUDENT') {
       const studentAssignments = await assignmentRepository.findAssignmentsForStudent(user.id);
       const isAssigned = studentAssignments.some((a) => a.id === id);
       if (!isAssigned) {
         throw new ApiError(
           HTTP_STATUS.FORBIDDEN,
-          'Access denied: This assignment has not been allocated to your groups.'
+          'Access denied: This assignment has not been allocated to your groups or enrolled courses.'
         );
       }
     }
@@ -65,7 +79,7 @@ class AssignmentService {
    * @param {object} updates
    * @returns {Promise<object>}
    */
-  async updateAssignment(id, adminId, updates) {
+  async updateAssignment(id, userOrId, updates) {
     if (!id || !UUID_REGEX.test(id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid assignment UUID format.');
     }
@@ -75,7 +89,36 @@ class AssignmentService {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Assignment not found.');
     }
 
-    await assignmentRepository.update(id, updates);
+    const userId = typeof userOrId === 'object' ? userOrId.id : userOrId;
+    const userRole = typeof userOrId === 'object' ? userOrId.role : 'ADMIN';
+
+    // RBAC: If caller is PROFESSOR, they can only edit their own assignments or assignments in their courses
+    if (userRole === 'PROFESSOR') {
+      const isCreator = existing.created_by === userId;
+      let teachesCourse = false;
+      if (existing.course_id) {
+        const courseRes = await query('SELECT professor_id FROM courses WHERE id = $1', [existing.course_id]);
+        if (courseRes.rows.length > 0 && courseRes.rows[0].professor_id === userId) {
+          teachesCourse = true;
+        }
+      }
+      if (!isCreator && !teachesCourse) {
+        throw new ApiError(
+          HTTP_STATUS.FORBIDDEN,
+          'Access denied: You are not authorized to edit assignments belonging to other faculty.'
+        );
+      }
+    }
+
+    await assignmentRepository.update(id, {
+      title: updates.title,
+      description: updates.description,
+      dueDate: updates.dueDate,
+      onedriveLink: updates.onedriveLink,
+      courseId: updates.courseId || updates.course_id,
+      submissionType: updates.submissionType || updates.submission_type,
+    });
+
     const refreshed = await assignmentRepository.findByIdWithDetails(id);
     return refreshed;
   }
@@ -98,22 +141,14 @@ class AssignmentService {
 
     try {
       const result = await assignmentRepository.assignToGroups(id, groupIds);
-      const updatedDetails = await assignmentRepository.findByIdWithDetails(id);
-      return {
-        ...result,
-        assignedGroups: updatedDetails.assigned_groups,
-        totalAssigned: updatedDetails.assigned_groups_count,
-      };
+      return result;
     } catch (err) {
-      if (err.message && err.message.includes('do not exist')) {
-        throw new ApiError(HTTP_STATUS.NOT_FOUND, err.message);
-      }
-      throw err;
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, err.message);
     }
   }
 
   /**
-   * Assign an assignment to all groups in the system
+   * Assign an assignment to all eligible groups
    * @param {string} id
    * @returns {Promise<object>}
    */
@@ -128,69 +163,16 @@ class AssignmentService {
     }
 
     const result = await assignmentRepository.assignToAllGroups(id);
-    const updatedDetails = await assignmentRepository.findByIdWithDetails(id);
-    return {
-      ...result,
-      assignedGroups: updatedDetails.assigned_groups,
-      totalAssigned: updatedDetails.assigned_groups_count,
-    };
-  }
-
-  /**
-   * Get assignments allocated to groups that the authenticated student belongs to
-   * @param {string} studentId
-   * @returns {Promise<Array>}
-   */
-  async getAssignmentsForStudent(studentId) {
-    return assignmentRepository.findAssignmentsForStudent(studentId);
-  }
-
-  /**
-   * Get assignment details for a student if allocated to one of their groups
-   * @param {string} assignmentId
-   * @param {string} studentId
-   * @param {string} [groupId]
-   * @returns {Promise<object>}
-   */
-  async getStudentAssignmentById(assignmentId, studentId, groupId = null) {
-    if (!assignmentId || !UUID_REGEX.test(assignmentId)) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid assignment UUID format.');
-    }
-    if (groupId && !UUID_REGEX.test(groupId)) {
-      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid group UUID format.');
-    }
-
-    const assignment = await assignmentRepository.findStudentAssignmentById(assignmentId, studentId, groupId);
-    if (!assignment) {
-      // Check if assignment exists at all
-      const exists = await assignmentRepository.findByIdWithDetails(assignmentId);
-      if (!exists) {
-        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Assignment not found.');
-      }
-      // If assignment exists, student is not authorized/allocated to it
-      throw new ApiError(
-        HTTP_STATUS.FORBIDDEN,
-        'You do not have access to this assignment. It has not been assigned to any of your groups.'
-      );
-    }
-
-    return assignment;
-  }
-
-  /**
-   * List all managed assignments for admins
-   * @returns {Promise<Array>}
-   */
-  async listAssignments() {
-    return assignmentRepository.listManagedAssignments();
+    return result;
   }
 
   /**
    * Delete an assignment
    * @param {string} id
+   * @param {object|string} [userOrId]
    * @returns {Promise<boolean>}
    */
-  async deleteAssignment(id) {
+  async deleteAssignment(id, userOrId = null) {
     if (!id || !UUID_REGEX.test(id)) {
       throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid assignment UUID format.');
     }
@@ -200,7 +182,85 @@ class AssignmentService {
       throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Assignment not found.');
     }
 
-    return assignmentRepository.delete(id);
+    if (userOrId) {
+      const userId = typeof userOrId === 'object' ? userOrId.id : userOrId;
+      const userRole = typeof userOrId === 'object' ? userOrId.role : 'ADMIN';
+
+      // RBAC: If caller is PROFESSOR, they can only delete their own assignments or assignments in their courses
+      if (userRole === 'PROFESSOR') {
+        const isCreator = existing.created_by === userId;
+        let teachesCourse = false;
+        if (existing.course_id) {
+          const courseRes = await query('SELECT professor_id FROM courses WHERE id = $1', [existing.course_id]);
+          if (courseRes.rows.length > 0 && courseRes.rows[0].professor_id === userId) {
+            teachesCourse = true;
+          }
+        }
+        if (!isCreator && !teachesCourse) {
+          throw new ApiError(
+            HTTP_STATUS.FORBIDDEN,
+            'Access denied: You are not authorized to delete assignments belonging to other faculty.'
+          );
+        }
+      }
+    }
+
+    const deleted = await assignmentRepository.delete(id);
+    if (!deleted) {
+      throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Assignment not found or already deleted.');
+    }
+    return deleted;
+  }
+
+  /**
+   * List all managed assignments with optional filters
+   * @param {object} [filters]
+   * @returns {Promise<Array>}
+   */
+  async listAssignments(filters = {}) {
+    return await assignmentRepository.listManagedAssignments(filters);
+  }
+
+  /**
+   * Get coursework feed for a student
+   * @param {string} studentId
+   * @param {object} [filters]
+   * @returns {Promise<Array>}
+   */
+  async getAssignmentsForStudent(studentId, filters = {}) {
+    return await assignmentRepository.findAssignmentsForStudent(studentId, filters);
+  }
+
+  /**
+   * Get specific coursework details for a student
+   * @param {string} assignmentId
+   * @param {string} studentId
+   * @param {string} [groupId]
+   * @returns {Promise<object>}
+   */
+  async getStudentAssignmentById(assignmentId, studentId, groupId = null) {
+    if (!assignmentId || !UUID_REGEX.test(assignmentId)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid assignment UUID format.');
+    }
+
+    const assignment = await assignmentRepository.findStudentAssignmentById(
+      assignmentId,
+      studentId,
+      groupId
+    );
+
+    if (!assignment) {
+      const basic = await assignmentRepository.findById(assignmentId);
+      if (!basic) {
+        throw new ApiError(HTTP_STATUS.NOT_FOUND, 'Assignment not found.');
+      }
+      throw new ApiError(
+        HTTP_STATUS.FORBIDDEN,
+        'Access denied: You do not have access to this coursework.'
+      );
+    }
+
+    return assignment;
   }
 }
 

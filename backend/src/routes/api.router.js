@@ -6,6 +6,8 @@ const assignmentRoutes = require('./assignment.routes');
 const submissionRoutes = require('./submission.routes');
 const adminRoutes = require('./admin.routes');
 const analyticsRoutes = require('./analytics.routes');
+const courseRoutes = require('./course.routes');
+const professorRoutes = require('./professor.routes');
 
 const apiRouter = express.Router();
 
@@ -14,6 +16,12 @@ apiRouter.use('/health', healthRoutes);
 
 // Authentication & Authorization routes
 apiRouter.use('/auth', authRoutes);
+
+// Course Management routes (Round 2)
+apiRouter.use('/courses', courseRoutes);
+
+// Professor Management & Analytics routes (Round 2)
+apiRouter.use('/professor', professorRoutes);
 
 // Student Group Management routes
 apiRouter.use('/groups', groupRoutes);

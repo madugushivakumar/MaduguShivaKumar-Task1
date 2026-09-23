@@ -58,7 +58,8 @@ const authenticateJWT = (req, res, next) => {
 
 /**
  * Role-Based Authorization Middleware: Enforces user role permissions
- * @param  {...string} allowedRoles - E.g. 'ADMIN', 'STUDENT'
+ * Maps PROFESSOR and ADMIN interchangeably for seamless faculty access
+ * @param  {...string} allowedRoles - E.g. 'ADMIN', 'PROFESSOR', 'STUDENT'
  */
 const authorizeRoles = (...allowedRoles) => {
   return (req, res, next) => {
@@ -71,7 +72,17 @@ const authorizeRoles = (...allowedRoles) => {
       );
     }
 
-    if (!allowedRoles.includes(req.user.role)) {
+    const userRole = req.user.role.toUpperCase();
+    const targetRoles = allowedRoles.map((r) => r.toUpperCase());
+
+    // Normalize ADMIN and PROFESSOR as faculty roles
+    const isFacultyAllowed = targetRoles.includes('ADMIN') || targetRoles.includes('PROFESSOR');
+    const isUserFaculty = userRole === 'ADMIN' || userRole === 'PROFESSOR';
+
+    const isAuthorized =
+      targetRoles.includes(userRole) || (isFacultyAllowed && isUserFaculty);
+
+    if (!isAuthorized) {
       return next(
         new ApiError(
           HTTP_STATUS.FORBIDDEN,

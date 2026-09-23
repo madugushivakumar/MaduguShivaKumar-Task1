@@ -9,6 +9,8 @@ import {
   Zap,
 } from 'lucide-react';
 import healthService from '../../services/healthService';
+import Button from '../ui/Button';
+import Badge from '../ui/Badge';
 
 export const HealthStatusCard = () => {
   const [loading, setLoading] = useState(false);
@@ -60,9 +62,9 @@ export const HealthStatusCard = () => {
   const isHealthy = healthData && healthData.success === true;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 overflow-hidden relative">
+    <div className="paper-card bg-[#FFFFFF] p-6 overflow-hidden relative shadow-paper-sm">
       {/* Header & Status Indicator */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#D9D5CA]/70 pb-5">
         <div className="flex items-center gap-3.5">
           <div
             className={`w-12 h-12 rounded-xl flex items-center justify-center ${
@@ -75,57 +77,44 @@ export const HealthStatusCard = () => {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="text-lg font-bold text-slate-900">Backend API Status</h3>
-              <span
-                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                  isHealthy
-                    ? 'bg-emerald-100 text-emerald-800'
-                    : 'bg-rose-100 text-rose-800'
-                }`}
-              >
-                {isHealthy ? (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Operational</span>
-                  </>
-                ) : (
-                  <>
-                    <XCircle className="w-3.5 h-3.5 text-rose-600" />
-                    <span>Offline / Unreachable</span>
-                  </>
-                )}
-              </span>
+              <h3 className="text-lg font-bold text-[#172033] font-display">
+                Backend API Status
+              </h3>
+              <Badge variant={isHealthy ? 'completed' : 'overdue'}>
+                {isHealthy ? 'Operational' : 'Offline / Unreachable'}
+              </Badge>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5 font-mono">
-              Endpoint: <span className="text-indigo-600 font-semibold">GET /api/health</span>
+            <p className="text-xs text-[#64748B] mt-0.5 font-mono">
+              Endpoint: <span className="text-[#1557D6] font-semibold">GET /api/health</span>
             </p>
           </div>
         </div>
 
-        <button
+        <Button
           onClick={fetchHealth}
-          disabled={loading}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-lg text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 disabled:opacity-50 transition-all shadow-sm shadow-indigo-100 cursor-pointer"
+          loading={loading}
+          icon={RefreshCw}
+          variant="secondary"
+          size="sm"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          <span>{loading ? 'Verifying...' : 'Test Connection'}</span>
-        </button>
+          {loading ? 'Verifying...' : 'Test Connection'}
+        </Button>
       </div>
 
       {/* Grid Diagnostics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-5">
         {/* Expected Response payload */}
-        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+        <div className="bg-[#FAF8F5] rounded-xl p-4 border border-[#D9D5CA] flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-2 font-mono">
             <span>API Response</span>
-            <Activity className="w-4 h-4 text-slate-400" />
+            <Activity className="w-4 h-4 text-[#94A3B8]" />
           </div>
           {isHealthy ? (
             <div>
-              <p className="text-sm font-semibold text-slate-900">
+              <p className="text-sm font-bold text-[#172033]">
                 "{healthData.message}"
               </p>
-              <div className="mt-2 text-xs font-mono bg-white p-2 rounded border border-slate-200 text-slate-600">
+              <div className="mt-2 text-[11px] font-mono bg-white p-2 rounded-lg border border-[#D9D5CA] text-[#475569] overflow-x-auto">
                 {JSON.stringify(healthData, null, 2)}
               </div>
             </div>
@@ -137,21 +126,21 @@ export const HealthStatusCard = () => {
         </div>
 
         {/* Network & Latency metrics */}
-        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+        <div className="bg-[#FAF8F5] rounded-xl p-4 border border-[#D9D5CA] flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-2 font-mono">
             <span>Network Latency</span>
-            <Zap className="w-4 h-4 text-slate-400" />
+            <Zap className="w-4 h-4 text-[#94A3B8]" />
           </div>
           <div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-black text-slate-900">
+              <span className="text-3xl font-black text-[#172033] font-display">
                 {latency !== null ? `${latency}ms` : '--'}
               </span>
-              <span className="text-xs text-slate-500">round-trip</span>
+              <span className="text-xs text-[#64748B]">round-trip</span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-[#64748B] mt-2">
               Last checked:{' '}
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-[#172033]">
                 {lastChecked || 'Never'}
               </span>
             </p>
@@ -159,10 +148,10 @@ export const HealthStatusCard = () => {
         </div>
 
         {/* Database Connectivity Status */}
-        <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 flex flex-col justify-between">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+        <div className="bg-[#FAF8F5] rounded-xl p-4 border border-[#D9D5CA] flex flex-col justify-between">
+          <div className="flex items-center justify-between text-xs font-semibold text-[#64748B] uppercase tracking-wider mb-2 font-mono">
             <span>Database Architecture</span>
-            <Database className="w-4 h-4 text-slate-400" />
+            <Database className="w-4 h-4 text-[#94A3B8]" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -173,15 +162,15 @@ export const HealthStatusCard = () => {
                     : 'bg-amber-500'
                 }`}
               />
-              <span className="text-sm font-semibold text-slate-900">
+              <span className="text-sm font-bold text-[#172033]">
                 {detailedData?.services?.database === 'connected'
                   ? 'PostgreSQL Connected'
                   : 'PostgreSQL Configured'}
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-2">
+            <p className="text-xs text-[#64748B] mt-2">
               Pool Status:{' '}
-              <span className="font-mono text-slate-700">
+              <span className="font-mono text-[#172033] font-bold">
                 {detailedData ? `${detailedData.services.dbLatencyMs}ms` : 'Ready'}
               </span>
             </p>

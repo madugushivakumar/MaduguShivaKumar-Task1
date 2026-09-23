@@ -36,11 +36,11 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
         </p>
         <div className="mt-6">
           <Link
-            to={user.role === 'ADMIN' ? '/admin/dashboard' : '/student/dashboard'}
+            to={['ADMIN', 'PROFESSOR'].includes(user?.role) ? '/admin/dashboard' : '/student/dashboard'}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm transition-colors shadow-sm"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span>Go to your {user.role === 'ADMIN' ? 'Admin' : 'Student'} Dashboard</span>
+            <span>Go to your {['ADMIN', 'PROFESSOR'].includes(user?.role) ? 'Faculty' : 'Student'} Dashboard</span>
           </Link>
         </div>
       </div>

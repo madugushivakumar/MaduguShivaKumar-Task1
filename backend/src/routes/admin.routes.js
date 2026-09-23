@@ -8,9 +8,9 @@ const {
 
 const router = express.Router();
 
-// All admin monitoring endpoints require authenticated ADMIN role
+// All admin and faculty monitoring endpoints require authenticated ADMIN or PROFESSOR role
 router.use(authenticateJWT);
-router.use(authorizeRoles('ADMIN'));
+router.use(authorizeRoles('ADMIN', 'PROFESSOR'));
 
 /**
  * System-wide progress and statistics overview

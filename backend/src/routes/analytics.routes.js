@@ -7,9 +7,9 @@ const {
 
 const router = express.Router();
 
-// Strict Access Control: All analytics endpoints require authenticated ADMIN role
+// Strict Access Control: All analytics endpoints require authenticated ADMIN or PROFESSOR role
 router.use(authenticateJWT);
-router.use(authorizeRoles('ADMIN'));
+router.use(authorizeRoles('ADMIN', 'PROFESSOR'));
 
 /**
  * System-wide analytics overview

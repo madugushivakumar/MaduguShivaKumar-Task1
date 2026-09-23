@@ -22,11 +22,15 @@ class AssignmentController {
 
   /**
    * GET /api/assignments
-   * List all managed assignments (Admin only)
+   * List all managed assignments (Admin / Professor only)
    */
   async getAssignments(req, res, next) {
     try {
-      const assignments = await assignmentService.listAssignments();
+      const { courseId, course_id, submissionType, submission_type } = req.query;
+      const assignments = await assignmentService.listAssignments({
+        courseId: courseId || course_id,
+        submissionType: submissionType || submission_type,
+      });
       return res.status(HTTP_STATUS.OK).json({
         success: true,
         message: 'Assignments retrieved successfully.',
@@ -42,12 +46,15 @@ class AssignmentController {
 
   /**
    * GET /api/assignments/student
-   * Get assignments allocated to groups that the student is enrolled in
+   * Get assignments allocated to groups or courses that the student is enrolled in
    */
   async getStudentAssignments(req, res, next) {
     try {
       const studentId = req.user.id;
-      const assignments = await assignmentService.getAssignmentsForStudent(studentId);
+      const { courseId, course_id } = req.query;
+      const assignments = await assignmentService.getAssignmentsForStudent(studentId, {
+        courseId: courseId || course_id,
+      });
       return res.status(HTTP_STATUS.OK).json({
         success: true,
         message: 'Student coursework retrieved successfully.',
@@ -106,8 +113,7 @@ class AssignmentController {
   async updateAssignment(req, res, next) {
     try {
       const { id } = req.params;
-      const adminId = req.user.id;
-      const assignment = await assignmentService.updateAssignment(id, adminId, req.body);
+      const assignment = await assignmentService.updateAssignment(id, req.user, req.body);
       return res.status(HTTP_STATUS.OK).json({
         success: true,
         message: `Assignment '${assignment.title}' updated successfully.`,
@@ -157,12 +163,12 @@ class AssignmentController {
 
   /**
    * DELETE /api/assignments/:id
-   * Delete an assignment (Admin only)
+   * Delete an assignment (Faculty/Admin only)
    */
   async deleteAssignment(req, res, next) {
     try {
       const { id } = req.params;
-      await assignmentService.deleteAssignment(id);
+      await assignmentService.deleteAssignment(id, req.user);
       return res.status(HTTP_STATUS.OK).json({
         success: true,
         message: 'Assignment deleted successfully.',

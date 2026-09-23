@@ -11,9 +11,9 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col items-center justify-center min-h-[300px]">
-        <div className="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3" />
-        <p className="text-xs font-medium text-slate-500">Calculating group performance...</p>
+      <div className="paper-card bg-white rounded-3xl border border-[#D9D5CA] p-6 shadow-2xs flex flex-col items-center justify-center min-h-[300px]">
+        <div className="w-8 h-8 border-3 border-[#1557D6] border-t-transparent rounded-full animate-spin mb-3" />
+        <p className="text-xs font-mono font-bold uppercase tracking-wider text-[#5A6578]">Calculating squad performance...</p>
       </div>
     );
   }
@@ -24,28 +24,28 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
   );
 
   return (
-    <div className="bg-white rounded-3xl border border-slate-200/80 p-6 shadow-sm flex flex-col justify-between h-full">
+    <div className="paper-card bg-white rounded-3xl border border-[#D9D5CA] p-6 shadow-2xs flex flex-col justify-between h-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-blue-50 text-[#1557D6] border border-blue-100 flex items-center justify-center">
             <Users className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Group Performance</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="text-sm font-bold font-editorial text-[#172033] text-base">Group Performance</h3>
+            <p className="text-xs text-[#5A6578]">
               Coursework completion rate per student team
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200/60">
+        <div className="flex items-center gap-2 font-mono">
+          <div className="inline-flex rounded-xl p-1 bg-[#FAF8F5] border border-[#D9D5CA]">
             <button
               onClick={() => setViewMode('chart')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 viewMode === 'chart'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white text-[#1557D6] shadow-2xs'
+                  : 'text-[#5A6578] hover:text-[#172033]'
               }`}
               title="Bar Chart View"
             >
@@ -54,10 +54,10 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
             </button>
             <button
               onClick={() => setViewMode('table')}
-              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold rounded-lg transition-all cursor-pointer ${
                 viewMode === 'table'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-800'
+                  ? 'bg-white text-[#1557D6] shadow-2xs'
+                  : 'text-[#5A6578] hover:text-[#172033]'
               }`}
               title="Table View"
             >
@@ -66,14 +66,14 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
             </button>
           </div>
 
-          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700">
+          <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-[#FAF8F5] border border-[#D9D5CA] text-[#172033]">
             {groups.length} Teams
           </span>
         </div>
       </div>
 
       {sortedGroups.length === 0 ? (
-        <div className="py-12 text-center text-xs text-slate-400">
+        <div className="py-12 text-center text-xs text-[#5A6578]">
           No group performance records available yet.
         </div>
       ) : viewMode === 'chart' ? (
@@ -85,7 +85,7 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
               pct === 100
                 ? 'bg-emerald-500'
                 : pct >= 60
-                ? 'bg-indigo-600'
+                ? 'bg-[#1557D6]'
                 : pct > 0
                 ? 'bg-amber-500'
                 : 'bg-slate-300';
@@ -94,7 +94,7 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
               pct === 100
                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                 : pct >= 60
-                ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
+                ? 'bg-blue-50 text-[#1557D6] border-blue-200'
                 : pct > 0
                 ? 'bg-amber-50 text-amber-700 border-amber-200'
                 : 'bg-slate-100 text-slate-600 border-slate-200';
@@ -102,21 +102,21 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
             return (
               <div
                 key={group.groupId}
-                className="p-3.5 rounded-2xl bg-slate-50/70 border border-slate-100 hover:border-purple-200 transition-all space-y-2 group"
+                className="p-3.5 rounded-2xl bg-[#FAF8F5]/80 border border-[#D9D5CA] hover:border-[#1557D6] transition-all space-y-2 group"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <span className="w-5 h-5 rounded-full bg-slate-200/80 text-[10px] font-mono font-black text-slate-600 flex items-center justify-center flex-shrink-0">
+                    <span className="w-5 h-5 rounded-full bg-white border border-[#D9D5CA] text-[10px] font-mono font-black text-[#172033] flex items-center justify-center flex-shrink-0">
                       {index + 1}
                     </span>
                     <div className="min-w-0">
                       <Link
                         to={`/admin/groups/${group.groupId}`}
-                        className="text-xs font-bold text-slate-800 hover:text-purple-600 transition-colors truncate block group-hover:underline"
+                        className="text-xs font-bold text-[#172033] hover:text-[#1557D6] transition-colors truncate block font-editorial text-sm"
                       >
                         {group.groupName}
                       </Link>
-                      <span className="text-[11px] text-slate-500">
+                      <span className="text-[11px] font-mono text-[#5A6578]">
                         {group.memberCount} members • {group.completedAssignments} /{' '}
                         {group.totalAssignments} completed
                       </span>
@@ -143,8 +143,8 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
       ) : (
         /* Table View */
         <div className="overflow-x-auto max-h-[360px]">
-          <table className="w-full text-left text-xs text-slate-600">
-            <thead className="bg-slate-100 text-[10px] uppercase font-bold text-slate-500 tracking-wider sticky top-0">
+          <table className="w-full text-left text-xs text-[#5A6578]">
+            <thead className="bg-[#FAF8F5] text-[10px] font-mono uppercase font-bold text-[#8A7E72] tracking-wider sticky top-0 border-b border-[#D9D5CA]">
               <tr>
                 <th className="px-3 py-2 rounded-l-lg">Team</th>
                 <th className="px-3 py-2 text-center">Members</th>
@@ -152,13 +152,13 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
                 <th className="px-3 py-2 text-right rounded-r-lg">Progress</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[#E5E0D8]">
               {sortedGroups.map((group) => (
-                <tr key={group.groupId} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-3 py-2.5 font-bold text-slate-900">
+                <tr key={group.groupId} className="hover:bg-[#FAF8F5]/60 transition-colors">
+                  <td className="px-3 py-2.5 font-bold font-editorial text-base text-[#172033]">
                     <Link
                       to={`/admin/groups/${group.groupId}`}
-                      className="hover:text-purple-600 truncate block max-w-[160px]"
+                      className="hover:text-[#1557D6] truncate block max-w-[160px]"
                     >
                       {group.groupName}
                     </Link>
@@ -171,10 +171,10 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
                   </td>
                   <td className="px-3 py-2.5 text-right font-mono font-bold">
                     <span
-                      className={`px-2 py-0.5 rounded-full text-[11px] ${
+                      className={`px-2 py-0.5 rounded-full text-[11px] border ${
                         group.progressPercentage === 100
-                          ? 'bg-emerald-50 text-emerald-700 font-black'
-                          : 'bg-indigo-50 text-indigo-700'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200 font-black'
+                          : 'bg-blue-50 text-[#1557D6] border-blue-200'
                       }`}
                     >
                       {group.progressPercentage}%
@@ -187,13 +187,13 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
         </div>
       )}
 
-      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-        <span>Performance strictly defined as assignment completion</span>
+      <div className="mt-4 pt-3 border-t border-[#E5E0D8] flex items-center justify-between text-[11px] font-mono text-[#5A6578]">
+        <span>Paced by assignment verification ledger</span>
         <Link
           to="/admin/groups"
-          className="font-bold text-purple-600 hover:text-purple-700 inline-flex items-center gap-1"
+          className="font-bold text-[#1557D6] hover:text-[#0D3EA8] inline-flex items-center gap-1"
         >
-          <span>All Groups</span>
+          <span>All Squads</span>
           <ArrowRight className="w-3 h-3" />
         </Link>
       </div>
@@ -202,3 +202,4 @@ export const GroupPerformanceChart = ({ groups = [], loading = false }) => {
 };
 
 export default GroupPerformanceChart;
+

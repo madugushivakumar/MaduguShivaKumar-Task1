@@ -74,6 +74,28 @@ const validateCreateAssignment = (req, res, next) => {
     );
   }
 
+  // Optional course_id validation
+  const resolvedCourseId = req.body.course_id || req.body.courseId;
+  if (resolvedCourseId) {
+    if (!UUID_REGEX.test(resolvedCourseId)) {
+      throw new ApiError(
+        HTTP_STATUS.BAD_REQUEST,
+        'Invalid course UUID format in "course_id".'
+      );
+    }
+    req.body.courseId = resolvedCourseId;
+  }
+
+  // Submission type validation (INDIVIDUAL or GROUP, default GROUP)
+  const resolvedSubmissionType = (req.body.submission_type || req.body.submissionType || 'GROUP').toUpperCase();
+  if (!['INDIVIDUAL', 'GROUP'].includes(resolvedSubmissionType)) {
+    throw new ApiError(
+      HTTP_STATUS.BAD_REQUEST,
+      'Invalid submission_type. Must be either "INDIVIDUAL" or "GROUP".'
+    );
+  }
+  req.body.submissionType = resolvedSubmissionType;
+
   // Optional group_ids validation
   const resolvedGroupIds = group_ids || groupIds;
   if (resolvedGroupIds !== undefined) {
@@ -110,19 +132,39 @@ const validateCreateAssignment = (req, res, next) => {
 const validateUpdateAssignment = (req, res, next) => {
   const { title, description, due_date, dueDate, onedrive_link, onedriveLink } = req.body;
 
+  const resolvedCourseId = req.body.course_id || req.body.courseId;
+  const resolvedSubmissionType = req.body.submission_type || req.body.submissionType;
+
   const hasAnyField =
     title !== undefined ||
     description !== undefined ||
     due_date !== undefined ||
     dueDate !== undefined ||
     onedrive_link !== undefined ||
-    onedriveLink !== undefined;
+    onedriveLink !== undefined ||
+    resolvedCourseId !== undefined ||
+    resolvedSubmissionType !== undefined;
 
   if (!hasAnyField) {
     throw new ApiError(
       HTTP_STATUS.BAD_REQUEST,
-      'At least one field (title, description, due_date, or onedrive_link) must be provided for update.'
+      'At least one field (title, description, due_date, onedrive_link, course_id, or submission_type) must be provided for update.'
     );
+  }
+
+  if (resolvedCourseId !== undefined) {
+    if (resolvedCourseId && !UUID_REGEX.test(resolvedCourseId)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid course UUID format in "course_id".');
+    }
+    req.body.courseId = resolvedCourseId || null;
+  }
+
+  if (resolvedSubmissionType !== undefined) {
+    const cleanType = resolvedSubmissionType.toUpperCase();
+    if (!['INDIVIDUAL', 'GROUP'].includes(cleanType)) {
+      throw new ApiError(HTTP_STATUS.BAD_REQUEST, 'Invalid submission_type. Must be "INDIVIDUAL" or "GROUP".');
+    }
+    req.body.submissionType = cleanType;
   }
 
   if (title !== undefined) {

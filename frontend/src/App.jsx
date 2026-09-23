@@ -22,6 +22,7 @@ import StudentAssignmentDetailsPage from './pages/StudentAssignmentDetailsPage';
 import AdminGroupListPage from './pages/AdminGroupListPage';
 import AdminGroupDetailsPage from './pages/AdminGroupDetailsPage';
 import AdminSubmissionsPage from './pages/AdminSubmissionsPage';
+import CourseDetailsPage from './pages/CourseDetailsPage';
 import NotFoundPage from './pages/NotFoundPage';
 
 function App() {
@@ -37,6 +38,16 @@ function App() {
             <Route path="assignments" element={<AssignmentsPage />} />
             <Route path="groups" element={<GroupsPage />} />
 
+            {/* Course Details (Accessible by Students, Professors, and Admins) */}
+            <Route
+              path="courses/:id"
+              element={
+                <ProtectedRoute allowedRoles={['STUDENT', 'ADMIN', 'PROFESSOR']}>
+                  <CourseDetailsPage />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Protected Student Portal */}
             <Route
               path="student/dashboard"
@@ -47,7 +58,7 @@ function App() {
               }
             />
 
-            {/* Phase 4: Student Group Management */}
+            {/* Student Group Management */}
             <Route
               path="student/groups"
               element={
@@ -67,13 +78,13 @@ function App() {
             <Route
               path="student/groups/:id"
               element={
-                <ProtectedRoute allowedRoles={['STUDENT', 'ADMIN']}>
+                <ProtectedRoute allowedRoles={['STUDENT', 'ADMIN', 'PROFESSOR']}>
                   <GroupDetailsPage />
                 </ProtectedRoute>
               }
             />
 
-            {/* Phase 6: Student Coursework & Two-Step Submission Confirmation */}
+            {/* Student Coursework & Two-Step Submission Confirmation */}
             <Route
               path="student/assignments"
               element={
@@ -90,12 +101,20 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="student/assignments/:id/success"
+              element={
+                <ProtectedRoute allowedRoles={['STUDENT']}>
+                  <StudentAssignmentDetailsPage forceSuccessView={true} />
+                </ProtectedRoute>
+              }
+            />
 
-            {/* Protected Admin Portal */}
+            {/* Protected Admin & Professor Portal */}
             <Route
               path="admin/dashboard"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
@@ -103,17 +122,17 @@ function App() {
             <Route
               path="admin/analytics"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <AdminDashboard />
                 </ProtectedRoute>
               }
             />
 
-            {/* Phase 5: Professor/Admin Assignment Management */}
+            {/* Faculty Assignment Management */}
             <Route
               path="admin/assignments"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <AdminAssignmentListPage />
                 </ProtectedRoute>
               }
@@ -121,7 +140,7 @@ function App() {
             <Route
               path="admin/assignments/create"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <CreateAssignmentPage />
                 </ProtectedRoute>
               }
@@ -129,7 +148,7 @@ function App() {
             <Route
               path="admin/assignments/:id/edit"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <EditAssignmentPage />
                 </ProtectedRoute>
               }
@@ -137,17 +156,17 @@ function App() {
             <Route
               path="admin/assignments/:id"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <AssignmentDetailsPage />
                 </ProtectedRoute>
               }
             />
 
-            {/* Phase 7: Progress Tracking & Monitoring */}
+            {/* Progress Tracking & Monitoring */}
             <Route
               path="admin/groups"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <AdminGroupListPage />
                 </ProtectedRoute>
               }
@@ -155,7 +174,7 @@ function App() {
             <Route
               path="admin/groups/:id"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <AdminGroupDetailsPage />
                 </ProtectedRoute>
               }
@@ -163,7 +182,7 @@ function App() {
             <Route
               path="admin/submissions"
               element={
-                <ProtectedRoute allowedRoles={['ADMIN']}>
+                <ProtectedRoute allowedRoles={['ADMIN', 'PROFESSOR']}>
                   <AdminSubmissionsPage />
                 </ProtectedRoute>
               }

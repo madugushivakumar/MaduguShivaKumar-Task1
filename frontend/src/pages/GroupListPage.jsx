@@ -6,14 +6,15 @@ import {
   Users,
   UserPlus,
   ArrowRight,
-  Search,
   Crown,
   Calendar,
   Loader2,
   AlertCircle,
   FolderPlus,
+  Sparkles,
+  Layers,
 } from 'lucide-react';
-import PhaseBadge from '../components/common/PhaseBadge';
+import { Card, CardBody, Badge, Button, SearchBar, EmptyState } from '../components/ui';
 
 export const GroupListPage = () => {
   const { user } = useAuth();
@@ -44,50 +45,66 @@ export const GroupListPage = () => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header & Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-              Student Project Groups
+      <div className="paper-card bg-[#FAF8F5] rounded-3xl p-6 sm:p-8 border border-[#D9D5CA] shadow-sm relative overflow-hidden">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-[11px] font-mono font-bold text-[#1557D6] bg-blue-50/80 px-2.5 py-0.5 rounded-full border border-blue-200/60 uppercase tracking-wider">
+                COHORT DIRECTORY
+              </span>
+              <span className="text-xs font-handwritten text-[#8A7E72] text-sm">
+                Collaborative project teams
+              </span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black font-editorial tracking-tight text-[#172033]">
+              Project Groups & Squads
             </h1>
-            <PhaseBadge phase="Phase 4" status="Active" />
+            <p className="text-xs sm:text-sm text-[#5A6578] mt-1.5 max-w-2xl leading-relaxed">
+              Form academic teams, invite student collaborators, coordinate milestone deliverables, and access shared Orbit rooms.
+            </p>
           </div>
-          <p className="text-xs text-slate-500">
-            Create project teams, invite student collaborators, and manage group rosters.
-          </p>
+
+          {user?.role === 'STUDENT' && (
+            <Link to="/student/groups/create">
+              <Button variant="primary" icon={FolderPlus}>
+                Create New Group
+              </Button>
+            </Link>
+          )}
         </div>
 
-        {user?.role === 'STUDENT' && (
-          <Link
-            to="/student/groups/create"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold shadow-md shadow-indigo-100 transition-all cursor-pointer"
-          >
-            <FolderPlus className="w-4 h-4" />
-            <span>Create New Group</span>
-          </Link>
-        )}
+        {/* Quick Stats Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-6 pt-5 border-t border-[#E5E0D8]">
+          <div className="bg-white/80 rounded-xl p-3 border border-[#E5E0D8]">
+            <p className="text-[10px] font-mono font-bold text-[#8A7E72] uppercase tracking-wider">Active Teams</p>
+            <p className="text-2xl font-black font-mono text-[#172033] mt-0.5">{groups.length}</p>
+          </div>
+          <div className="bg-white/80 rounded-xl p-3 border border-[#E5E0D8]">
+            <p className="text-[10px] font-mono font-bold text-[#8A7E72] uppercase tracking-wider">My Groups</p>
+            <p className="text-2xl font-black font-mono text-[#1557D6] mt-0.5">
+              {groups.filter(g => g.created_by === user?.id || g.is_creator).length}
+            </p>
+          </div>
+          <div className="bg-white/80 rounded-xl p-3 border border-[#E5E0D8] col-span-2 sm:col-span-1">
+            <p className="text-[10px] font-mono font-bold text-[#8A7E72] uppercase tracking-wider">Mode</p>
+            <p className="text-sm font-bold text-emerald-700 mt-1 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              Collaborative Orbit
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-3 shadow-sm flex items-center gap-3">
-        <Search className="w-4 h-4 text-slate-400 ml-1" />
-        <input
-          type="text"
+      <div className="paper-card bg-white rounded-2xl border border-[#D9D5CA] p-3 shadow-2xs">
+        <SearchBar
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Filter groups by team name..."
-          className="w-full text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none bg-transparent"
+          onClear={() => setSearchQuery('')}
+          placeholder="Filter squads and teams by group name..."
         />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className="text-xs text-slate-400 hover:text-slate-600 px-2 cursor-pointer"
-          >
-            Clear
-          </button>
-        )}
       </div>
 
       {/* Error Alert */}
@@ -100,39 +117,25 @@ export const GroupListPage = () => {
 
       {/* Loading Skeleton / Spinner */}
       {loading ? (
-        <div className="min-h-[30vh] flex flex-col items-center justify-center">
-          <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
-          <p className="mt-3 text-xs text-slate-500 font-medium">
-            Loading your project groups...
+        <div className="min-h-[30vh] flex flex-col items-center justify-center paper-card bg-white rounded-3xl border border-[#D9D5CA] p-12">
+          <Loader2 className="w-8 h-8 text-[#1557D6] animate-spin" />
+          <p className="mt-3 text-xs font-mono font-bold uppercase tracking-wider text-[#5A6578]">
+            Loading project groups from registry...
           </p>
         </div>
       ) : filteredGroups.length === 0 ? (
         /* Empty State */
-        <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center mx-auto mb-4">
-            <Users className="w-8 h-8" />
-          </div>
-          <h3 className="text-lg font-bold text-slate-900">
-            {searchQuery ? 'No matching groups found' : 'No Project Groups Yet'}
-          </h3>
-          <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
-            {searchQuery
-              ? `No teams match the query "${searchQuery}". Try a different keyword.`
-              : 'You have not joined or created any project groups. Form a team with your peers to collaborate on assignments.'}
-          </p>
-
-          {user?.role === 'STUDENT' && !searchQuery && (
-            <div className="mt-6">
-              <Link
-                to="/student/groups/create"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-100 transition-all"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>Create Your First Group</span>
-              </Link>
-            </div>
-          )}
-        </div>
+        <EmptyState
+          icon={Users}
+          title={searchQuery ? 'No matching groups found' : 'No Project Groups Yet'}
+          description={
+            searchQuery
+              ? `No teams match "${searchQuery}". Try searching with a different term.`
+              : 'You have not joined or created any project groups. Form a team with your peers to collaborate on assignments.'
+          }
+          actionText={user?.role === 'STUDENT' && !searchQuery ? 'Create Your First Group' : undefined}
+          onAction={user?.role === 'STUDENT' && !searchQuery ? () => window.location.href = '/student/groups/create' : undefined}
+        />
       ) : (
         /* Groups Grid */
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -142,42 +145,41 @@ export const GroupListPage = () => {
             return (
               <div
                 key={group.id}
-                className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between"
+                className="paper-card bg-white rounded-2xl border border-[#D9D5CA] p-5 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                      <Users className="w-5 h-5" />
+                    <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1557D6] border border-blue-100 flex items-center justify-center font-bold font-mono text-sm">
+                      {group.name.substring(0, 2).toUpperCase()}
                     </div>
                     {isCreator && (
-                      <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                        <Crown className="w-3 h-3 text-amber-500" />
-                        Leader / Creator
-                      </span>
+                      <Badge variant="leader" icon={<Crown className="w-3 h-3 text-amber-500" />}>
+                        Team Leader
+                      </Badge>
                     )}
                   </div>
 
-                  <h3 className="text-base font-bold text-slate-900 line-clamp-1">
+                  <h3 className="text-base font-bold text-[#172033] line-clamp-1 font-editorial text-lg group-hover:text-[#1557D6] transition-colors">
                     {group.name}
                   </h3>
 
-                  <p className="text-xs text-slate-500 mt-1">
-                    Creator: <span className="text-slate-700 font-medium">{group.creator_name || 'Student Creator'}</span>
+                  <p className="text-xs text-[#5A6578] mt-1.5">
+                    Lead: <span className="text-[#172033] font-medium">{group.creator_name || 'Student Creator'}</span>
                   </p>
                 </div>
 
-                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5 text-slate-500 font-medium">
-                    <Users className="w-3.5 h-3.5 text-slate-400" />
+                <div className="mt-5 pt-4 border-t border-[#E5E0D8] flex items-center justify-between text-xs">
+                  <div className="flex items-center gap-1.5 text-[#5A6578] font-medium font-mono">
+                    <Users className="w-3.5 h-3.5 text-[#8A7E72]" />
                     <span>{group.member_count} {group.member_count === 1 ? 'Member' : 'Members'}</span>
                   </div>
 
                   <Link
                     to={`/student/groups/${group.id}`}
-                    className="inline-flex items-center gap-1 font-bold text-indigo-600 hover:text-indigo-700"
+                    className="inline-flex items-center gap-1.5 font-bold text-[#1557D6] hover:text-[#0D3EA8] transition-colors"
                   >
-                    <span>View Team</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <span>Enter Orbit</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
               </div>
@@ -190,3 +192,4 @@ export const GroupListPage = () => {
 };
 
 export default GroupListPage;
+

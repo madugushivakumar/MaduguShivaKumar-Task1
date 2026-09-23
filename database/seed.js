@@ -30,19 +30,36 @@ async function runSeed() {
   const client = await pool.connect();
 
   try {
-    const seedFile = path.resolve(__dirname, 'seeds/001_seed_initial_data.sql');
-    if (!fs.existsSync(seedFile)) {
-      throw new Error(`Seed SQL file not found: ${seedFile}`);
+    const seedsDir = path.resolve(__dirname, 'seeds');
+    const seedFiles = fs
+      .readdirSync(seedsDir)
+      .filter((file) => file.endsWith('.sql'))
+      .sort();
+
+    if (seedFiles.length === 0) {
+      throw new Error(`No seed SQL files found in: ${seedsDir}`);
     }
 
-    const sql = fs.readFileSync(seedFile, 'utf8');
+    for (const file of seedFiles) {
+      const filePath = path.join(seedsDir, file);
+      console.log(`▶️  Applying seed file: ${file}...`);
+      const sql = fs.readFileSync(filePath, 'utf8');
 
-    await client.query('BEGIN');
-    await client.query(sql);
-    await client.query('COMMIT');
+      await client.query('BEGIN');
+      try {
+        await client.query(sql);
+        await client.query('COMMIT');
+        console.log(`✅ Seeded successfully: ${file}`);
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      }
+    }
 
     // Count seeded records across all entities
     const uCount = await client.query('SELECT COUNT(*) FROM users');
+    const cCount = await client.query('SELECT COUNT(*) FROM courses');
+    const csCount = await client.query('SELECT COUNT(*) FROM course_students');
     const gCount = await client.query('SELECT COUNT(*) FROM groups');
     const gmCount = await client.query('SELECT COUNT(*) FROM group_members');
     const aCount = await client.query('SELECT COUNT(*) FROM assignments');
@@ -51,6 +68,8 @@ async function runSeed() {
 
     console.log('\n📊 Seed Records Summary:');
     console.log(`👤 Users             : ${uCount.rows[0].count}`);
+    console.log(`🎓 Courses           : ${cCount.rows[0].count}`);
+    console.log(`📑 Enrollments       : ${csCount.rows[0].count}`);
     console.log(`👥 Groups            : ${gCount.rows[0].count}`);
     console.log(`🤝 Group Members     : ${gmCount.rows[0].count}`);
     console.log(`📚 Assignments       : ${aCount.rows[0].count}`);

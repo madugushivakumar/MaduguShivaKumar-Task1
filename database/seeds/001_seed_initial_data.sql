@@ -10,7 +10,19 @@
 -- Clean up existing data in reverse order of foreign key dependencies
 DELETE FROM submissions;
 DELETE FROM assignment_groups;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'course_students') THEN
+        EXECUTE 'DELETE FROM course_students';
+    END IF;
+END $$;
 DELETE FROM assignments;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'courses') THEN
+        EXECUTE 'DELETE FROM courses';
+    END IF;
+END $$;
 DELETE FROM group_members;
 DELETE FROM groups;
 DELETE FROM users;

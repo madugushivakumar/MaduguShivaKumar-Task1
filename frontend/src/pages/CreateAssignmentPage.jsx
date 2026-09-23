@@ -2,56 +2,130 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import assignmentService from '../services/assignmentService';
 import groupService from '../services/groupService';
+import courseService from '../services/courseService';
 import {
-  BookPlus,
-  ArrowLeft,
   Calendar,
+  Clock,
   ExternalLink,
   Users,
+  User,
   AlertCircle,
   Loader2,
-  CheckCircle,
+  Check,
+  ChevronRight,
+  Bold,
+  Italic,
+  Underline,
+  List,
+  Code,
+  Link2,
 } from 'lucide-react';
-import PhaseBadge from '../components/common/PhaseBadge';
+import {
+  Button,
+  Card,
+  Badge,
+  Input,
+  Select,
+  Breadcrumb,
+} from '../components/ui';
 
 export const CreateAssignmentPage = () => {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [dateOnly, setDateOnly] = useState('');
+  const [timeOnly, setTimeOnly] = useState('23:59');
   const [onedriveLink, setOnedriveLink] = useState('');
 
-  // Allocation strategy: 'none' | 'all' | 'specific'
-  const [allocationType, setAllocationType] = useState('none');
+  // Course linkage
+  const [courses, setCourses] = useState([]);
+  const [selectedCourseId, setSelectedCourseId] = useState('');
+
+  // Submission type: 'INDIVIDUAL' | 'GROUP'
+  const [submissionType, setSubmissionType] = useState('GROUP');
+
+  // Assign to: 'all' | 'specific'
+  const [assignTo, setAssignTo] = useState('all');
   const [availableGroups, setAvailableGroups] = useState([]);
   const [selectedGroupIds, setSelectedGroupIds] = useState([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draftSaved, setDraftSaved] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Load available groups if faculty chooses 'specific'
+  // Load available courses and groups
   useEffect(() => {
-    const fetchGroups = async () => {
+    const fetchData = async () => {
       setLoadingGroups(true);
       try {
-        const res = await groupService.getGroups();
-        setAvailableGroups(res.data?.groups || []);
+        const [groupsRes, coursesRes] = await Promise.all([
+          groupService.getGroups().catch(() => ({ data: { groups: [] } })),
+          courseService.getCourses().catch(() => ({ data: { courses: [] } })),
+        ]);
+        setAvailableGroups(groupsRes.data?.groups || []);
+        const loadedCourses = coursesRes.data?.courses || [];
+        setCourses(loadedCourses);
+        if (loadedCourses.length > 0 && !selectedCourseId) {
+          setSelectedCourseId(loadedCourses[0].id);
+        }
+
+        // Set default due date to 7 days from now
+        const defaultDue = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        setDateOnly(defaultDue.toISOString().slice(0, 10));
       } catch (err) {
-        console.error('Failed to load groups for assignment mapping', err);
+        console.error('Failed to load courses or groups for assignment mapping', err);
       } finally {
         setLoadingGroups(false);
       }
     };
 
-    fetchGroups();
+    // Load any existing draft
+    try {
+      const savedDraft = localStorage.getItem('joineazy_assignment_draft');
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft);
+        if (parsed.title) setTitle(parsed.title);
+        if (parsed.description) setDescription(parsed.description);
+        if (parsed.dateOnly) setDateOnly(parsed.dateOnly);
+        if (parsed.timeOnly) setTimeOnly(parsed.timeOnly);
+        if (parsed.onedriveLink) setOnedriveLink(parsed.onedriveLink);
+        if (parsed.submissionType) setSubmissionType(parsed.submissionType);
+        if (parsed.selectedCourseId) setSelectedCourseId(parsed.selectedCourseId);
+      }
+    } catch (e) {
+      console.warn('Draft restore error', e);
+    }
+
+    fetchData();
   }, []);
 
   const handleToggleGroup = (groupId) => {
     setSelectedGroupIds((prev) =>
       prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId]
     );
+  };
+
+  const handleSaveDraft = (e) => {
+    e.preventDefault();
+    try {
+      const draft = {
+        title,
+        description,
+        dateOnly,
+        timeOnly,
+        onedriveLink,
+        submissionType,
+        selectedCourseId,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem('joineazy_assignment_draft', JSON.stringify(draft));
+      setDraftSaved(true);
+      setTimeout(() => setDraftSaved(false), 3000);
+    } catch (e) {
+      console.error('Failed to save draft', e);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -63,7 +137,7 @@ export const CreateAssignmentPage = () => {
       return;
     }
 
-    if (!dueDate) {
+    if (!dateOnly) {
       setErrorMessage('Please select a valid submission due date.');
       return;
     }
@@ -73,24 +147,32 @@ export const CreateAssignmentPage = () => {
       return;
     }
 
-    if (allocationType === 'specific' && selectedGroupIds.length === 0) {
-      setErrorMessage('Please select at least one group to allocate, or choose "Leave unallocated".');
+    if (submissionType === 'GROUP' && assignTo === 'specific' && selectedGroupIds.length === 0) {
+      setErrorMessage('Please select at least one cohort to allocate, or select "All Enrolled Cohorts".');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
+      const combinedDateTime = new Date(`${dateOnly}T${timeOnly || '23:59'}:00`);
+      const isoDueDate = isNaN(combinedDateTime.getTime())
+        ? new Date(dateOnly).toISOString()
+        : combinedDateTime.toISOString();
+
       const payload = {
         title: title.trim(),
         description: description.trim(),
-        dueDate: new Date(dueDate).toISOString(),
+        dueDate: isoDueDate,
         onedriveLink: onedriveLink.trim(),
-        assignAll: allocationType === 'all',
-        groupIds: allocationType === 'specific' ? selectedGroupIds : [],
+        courseId: selectedCourseId || null,
+        submissionType: submissionType,
+        assignAll: assignTo === 'all',
+        groupIds: submissionType === 'GROUP' && assignTo === 'specific' ? selectedGroupIds : [],
       };
 
       const res = await assignmentService.createAssignment(payload);
+      localStorage.removeItem('joineazy_assignment_draft');
       const createdId = res.data?.assignment?.id;
 
       if (createdId) {
@@ -99,227 +181,304 @@ export const CreateAssignmentPage = () => {
         navigate('/admin/assignments');
       }
     } catch (err) {
-      setErrorMessage(err.message || 'Failed to create assignment.');
+      setErrorMessage(err.message || 'Failed to publish assignment.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="max-w-2xl mx-auto my-6 space-y-6">
-      {/* Top Header */}
-      <div className="flex items-center justify-between">
-        <Link
-          to="/admin/assignments"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Back to All Assignments</span>
-        </Link>
-        <PhaseBadge phase="Phase 5" status="Author Coursework" />
-      </div>
+  const selectedCourseObj = courses.find((c) => c.id.toString() === selectedCourseId?.toString());
 
-      <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-        <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3 shadow-sm shadow-indigo-100">
-            <BookPlus className="w-6 h-6" />
-          </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Create Course Assignment
+  return (
+    <div className="space-y-6 pb-16">
+      {/* Top Header & Wizard Stepper (Panel 07 Reference) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <Breadcrumb backTo="/admin/assignments" backLabel="Assignments" />
+          <h1 className="text-3xl sm:text-4xl font-black text-[#172033] font-editorial tracking-tight mt-1">
+            Create New Assignment
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Specify coursework requirements, external OneDrive submission link, and target student groups.
-          </p>
         </div>
 
-        {/* Error Alert */}
-        {errorMessage && (
-          <div className="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs">
-            <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-            <span>{errorMessage}</span>
-          </div>
-        )}
+        {/* 4-Step Wizard Indicator (Panel 07) */}
+        <div className="flex items-center gap-1.5 bg-white p-1.5 rounded-2xl border border-[#D9D5CA] text-xs font-mono font-bold shadow-paper-sm">
+          <span className="px-3 py-1 rounded-xl bg-[#1557D6] text-white shadow-xs">
+            1 Content
+          </span>
+          <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8]" />
+          <span className="px-2.5 py-1 text-[#64748B]">2 Rules</span>
+          <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8]" />
+          <span className="px-2.5 py-1 text-[#64748B]">3 Groups</span>
+          <ChevronRight className="w-3.5 h-3.5 text-[#94A3B8]" />
+          <span className="px-2.5 py-1 text-[#64748B]">4 Publish</span>
+        </div>
+      </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Assignment Title
-            </label>
-            <input
-              type="text"
-              required
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Distributed Consensus & Raft Protocol Implementation"
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-            />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Instructions & Description
-            </label>
-            <textarea
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Provide assignment guidelines, deliverables, and evaluation criteria..."
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all resize-y"
-            />
-          </div>
-
-          {/* Due Date & Time */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Submission Due Date & Time
-            </label>
-            <div className="relative">
-              <input
-                type="datetime-local"
-                required
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-              />
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Students will see this deadline displayed with live status badges.
-            </p>
-          </div>
-
-          {/* OneDrive Link */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              OneDrive Submission Folder Link
-            </label>
-            <div className="relative">
-              <input
-                type="url"
-                required
-                value={onedriveLink}
-                onChange={(e) => setOnedriveLink(e.target.value)}
-                placeholder="https://onedrive.live.com/?id=sample-course-folder-2026"
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
-              />
-            </div>
-            <p className="text-[11px] text-slate-400 mt-1">
-              Students will click this link to access the OneDrive folder directly.
-            </p>
-          </div>
-
-          {/* Initial Allocation Strategy */}
-          <div className="pt-2 border-t border-slate-100">
-            <label className="block text-xs font-bold text-slate-700 mb-2">
-              Group Allocation Strategy
-            </label>
-
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setAllocationType('none')}
-                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
-                  allocationType === 'none'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                Unallocated
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAllocationType('all')}
-                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
-                  allocationType === 'all'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                All Groups
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAllocationType('specific')}
-                className={`p-3 rounded-xl border text-xs font-bold text-center transition-all cursor-pointer ${
-                  allocationType === 'specific'
-                    ? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-                    : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
-                }`}
-              >
-                Specific Groups
-              </button>
-            </div>
-
-            {/* Specific Group Checkbox List */}
-            {allocationType === 'specific' && (
-              <div className="mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-200 max-h-48 overflow-y-auto space-y-2">
-                {loadingGroups ? (
-                  <div className="py-4 text-center text-xs text-slate-500">
-                    <Loader2 className="w-4 h-4 animate-spin mx-auto mb-1 text-indigo-600" />
-                    Loading available student groups...
-                  </div>
-                ) : availableGroups.length === 0 ? (
-                  <p className="text-xs text-slate-500 text-center py-2">
-                    No student groups found in the system yet.
-                  </p>
-                ) : (
-                  availableGroups.map((grp) => {
-                    const isChecked = selectedGroupIds.includes(grp.id);
-
-                    return (
-                      <label
-                        key={grp.id}
-                        className="flex items-center gap-2.5 p-2 rounded-xl bg-white border border-slate-200 hover:border-indigo-300 cursor-pointer text-xs"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => handleToggleGroup(grp.id)}
-                          className="rounded text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <span className="font-bold text-slate-800">{grp.name}</span>
-                        <span className="text-[11px] text-slate-400 ml-auto">
-                          {grp.member_count} {grp.member_count === 1 ? 'member' : 'members'}
-                        </span>
-                      </label>
-                    );
-                  })
-                )}
+      {/* Two Column Workbench */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* LEFT 7 COLS: Form Configuration Canvas */}
+        <div className="lg:col-span-7 space-y-6">
+          <Card className="bg-white p-6 sm:p-8 space-y-5">
+            {/* Form Alerts */}
+            {errorMessage && (
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-rose-700 text-xs">
+                <AlertCircle className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
+                <span>{errorMessage}</span>
               </div>
             )}
-          </div>
 
-          {/* Form Actions */}
-          <div className="pt-4 flex items-center gap-3">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-sm transition-all shadow-md shadow-indigo-100 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Publishing Assignment...</span>
-                </>
-              ) : (
-                <>
-                  <BookPlus className="w-4 h-4" />
-                  <span>Publish Assignment</span>
-                </>
+            {draftSaved && (
+              <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center gap-2.5 text-emerald-700 text-xs">
+                <Check className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>Assignment blueprint draft saved to local storage.</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Title & Course Selector Row */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  label="Title *"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Implement REST API"
+                  required
+                />
+
+                <Select
+                  label="Course *"
+                  value={selectedCourseId}
+                  onChange={(e) => setSelectedCourseId(e.target.value)}
+                >
+                  <option value="">Select Academic Course</option>
+                  {courses.map((c, idx) => (
+                    <option key={c.id || c._id || `course-${c.code || idx}`} value={c.id || c._id}>
+                      {c.code} - {c.title || c.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+
+              {/* Description & Rich Text Toolbar (Panel 07) */}
+              <div className="space-y-1.5 text-left">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-[#172033]">
+                    Description & Specifications
+                  </label>
+                  {/* Rich Text Toolbar Mock */}
+                  <div className="flex items-center gap-1 border border-[#D9D5CA] rounded-lg p-0.5 bg-[#FAF8F5]">
+                    <button type="button" className="p-1 hover:bg-white rounded text-[#64748B] hover:text-[#172033]" title="Bold">
+                      <Bold className="w-3 h-3" />
+                    </button>
+                    <button type="button" className="p-1 hover:bg-white rounded text-[#64748B] hover:text-[#172033]" title="Italic">
+                      <Italic className="w-3 h-3" />
+                    </button>
+                    <button type="button" className="p-1 hover:bg-white rounded text-[#64748B] hover:text-[#172033]" title="Underline">
+                      <Underline className="w-3 h-3" />
+                    </button>
+                    <button type="button" className="p-1 hover:bg-white rounded text-[#64748B] hover:text-[#172033]" title="List">
+                      <List className="w-3 h-3" />
+                    </button>
+                    <button type="button" className="p-1 hover:bg-white rounded text-[#64748B] hover:text-[#172033]" title="Link">
+                      <Link2 className="w-3 h-3" />
+                    </button>
+                    <button type="button" className="p-1 hover:bg-white rounded text-[#64748B] hover:text-[#172033]" title="Code">
+                      <Code className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+
+                <textarea
+                  rows={4}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Build authentication using JWT, implement login, registration, and role-based access control..."
+                  className="w-full rounded-xl bg-white border border-[#D9D5CA] text-xs sm:text-sm text-[#172033] p-3 outline-none focus:border-[#1557D6] focus:ring-2 focus:ring-[#1557D6]/20 transition-all font-mono"
+                />
+              </div>
+
+              {/* Due Date & Submission Type */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Input
+                  type="date"
+                  label="Due Date *"
+                  value={dateOnly}
+                  onChange={(e) => setDateOnly(e.target.value)}
+                  required
+                />
+
+                {/* Submission Type: Radio (Individual / Group) */}
+                <div className="space-y-1.5 text-left">
+                  <label className="block text-xs font-bold text-[#172033]">Submission Type</label>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setSubmissionType('INDIVIDUAL')}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                        submissionType === 'INDIVIDUAL'
+                          ? 'bg-[#EFF6FF] border-[#BFDBFE] text-[#1557D6]'
+                          : 'bg-[#FAF8F5] border-[#D9D5CA] text-[#64748B]'
+                      }`}
+                    >
+                      <User className="w-3.5 h-3.5" />
+                      <span>Individual</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSubmissionType('GROUP')}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-bold transition-all ${
+                        submissionType === 'GROUP'
+                          ? 'bg-[#EFF6FF] border-[#BFDBFE] text-[#1557D6]'
+                          : 'bg-[#FAF8F5] border-[#D9D5CA] text-[#64748B]'
+                      }`}
+                    >
+                      <Users className="w-3.5 h-3.5" />
+                      <span>Group</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* OneDrive Drop Folder Link */}
+              <Input
+                label="Official OneDrive Submission Folder URL *"
+                value={onedriveLink}
+                onChange={(e) => setOnedriveLink(e.target.value)}
+                placeholder="https://university-my.sharepoint.com/:f:/r/personal/course-drop-folder"
+                helperText="Must be a valid web URL starting with https://"
+                required
+              />
+
+              {/* Group Allocation Options (If Group Submission) */}
+              {submissionType === 'GROUP' && (
+                <div className="space-y-2 pt-2 border-t border-[#D9D5CA]/70">
+                  <label className="block text-xs font-bold text-[#172033]">
+                    Target Student Cohorts
+                  </label>
+                  <div className="flex items-center gap-4 text-xs">
+                    <label className="flex items-center gap-2 cursor-pointer font-medium text-[#172033]">
+                      <input
+                        type="radio"
+                        name="assignTo"
+                        value="all"
+                        checked={assignTo === 'all'}
+                        onChange={() => setAssignTo('all')}
+                        className="text-[#1557D6]"
+                      />
+                      <span>All Enrolled Groups</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer font-medium text-[#172033]">
+                      <input
+                        type="radio"
+                        name="assignTo"
+                        value="specific"
+                        checked={assignTo === 'specific'}
+                        onChange={() => setAssignTo('specific')}
+                        className="text-[#1557D6]"
+                      />
+                      <span>Select Specific Groups</span>
+                    </label>
+                  </div>
+
+                  {assignTo === 'specific' && (
+                    <div className="p-3 bg-[#FAF8F5] rounded-xl border border-[#D9D5CA] max-h-40 overflow-y-auto space-y-2 mt-2">
+                      {availableGroups.length === 0 ? (
+                        <p className="text-xs text-[#64748B]">No groups created yet in this course.</p>
+                      ) : (
+                        availableGroups.map((grp) => (
+                          <label
+                            key={grp.id}
+                            className="flex items-center gap-2 text-xs text-[#172033] cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedGroupIds.includes(grp.id)}
+                              onChange={() => handleToggleGroup(grp.id)}
+                              className="rounded text-[#1557D6]"
+                            />
+                            <span>{grp.name} ({grp.member_count || 1} members)</span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
-            </button>
 
-            <Link
-              to="/admin/assignments"
-              className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors text-center"
-            >
-              Cancel
-            </Link>
+              {/* Form Action Buttons */}
+              <div className="pt-4 border-t border-[#D9D5CA] flex items-center justify-between">
+                <Button
+                  variant="secondary"
+                  onClick={handleSaveDraft}
+                >
+                  Save as Draft
+                </Button>
+
+                <Button
+                  type="submit"
+                  loading={isSubmitting}
+                  icon={ChevronRight}
+                  iconPosition="right"
+                >
+                  Publish Assignment
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+
+        {/* RIGHT 5 COLS: LIVE PREVIEW CARD (Panel 07 Reference) */}
+        <div className="lg:col-span-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase tracking-wider text-[#64748B] font-bold">
+              Live Preview
+            </span>
+            <Badge variant="in-progress" size="xs">Auto-Updating</Badge>
           </div>
-        </form>
+
+          {/* Student-facing card preview */}
+          <Card className="bg-white p-6 space-y-4 shadow-paper">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <span className="text-[10px] font-mono font-bold text-[#1557D6] uppercase bg-[#EFF6FF] px-2 py-0.5 rounded border border-[#BFDBFE]">
+                  {selectedCourseObj?.code || 'CS-COURSE'}
+                </span>
+                <h3 className="text-base font-bold text-[#172033] font-editorial mt-1">
+                  {title || 'Implement Authentication System'}
+                </h3>
+              </div>
+              <Badge variant={submissionType === 'GROUP' ? 'academic' : 'neutral'} size="xs">
+                {submissionType}
+              </Badge>
+            </div>
+
+            <div className="space-y-1.5 text-xs text-[#64748B] font-mono pt-2 border-t border-[#D9D5CA]/70">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-3.5 h-3.5 text-[#1557D6]" />
+                <span>Due: {dateOnly || 'Sep 25, 2026'} • 11:59 PM</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-[#1557D6]" />
+                <span>Marks: 100</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users className="w-3.5 h-3.5 text-[#1557D6]" />
+                <span>Type: {submissionType === 'GROUP' ? 'Cohort Team' : 'Individual'}</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#475569] leading-relaxed bg-[#FAF8F5] p-3 rounded-xl border border-[#D9D5CA] font-mono line-clamp-4">
+              {description ||
+                'Build authentication using JWT, implement login, registration, and role-based access control.'}
+            </p>
+
+            <div className="pt-2 border-t border-[#D9D5CA]/70 flex items-center justify-between text-[11px] text-[#64748B]">
+              <span>Verified OneDrive Folder Target</span>
+              <span className="text-[#1557D6] font-bold">Ready for Submission →</span>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );

@@ -8,8 +8,9 @@ import {
   AlertCircle,
   Loader2,
   CheckCircle,
+  Sparkles,
 } from 'lucide-react';
-import PhaseBadge from '../components/common/PhaseBadge';
+import { Card, CardBody, Button, Input, Badge } from '../components/ui';
 
 export const CreateGroupPage = () => {
   const navigate = useNavigate();
@@ -46,38 +47,50 @@ export const CreateGroupPage = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto my-6 space-y-6">
-      {/* Top Header */}
+    <div className="max-w-lg mx-auto my-8 space-y-6">
+      {/* Top Header Back Link */}
       <div className="flex items-center justify-between">
         <Link
           to="/student/groups"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-600 hover:text-indigo-600 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#5A6578] hover:text-[#1557D6] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to All Groups</span>
+          <span>Back to Group Registry</span>
         </Link>
-        <PhaseBadge phase="Phase 4" status="Group Creator" />
+        <span className="text-[11px] font-mono font-bold text-[#1557D6] bg-blue-50/80 px-2.5 py-0.5 rounded-full border border-blue-200/60 uppercase">
+          COHORT CREATION
+        </span>
       </div>
 
-      <div className="bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
+      <div className="paper-card bg-[#FFFDF7] rounded-3xl border border-[#D9D5CA] p-8 shadow-sm relative overflow-hidden">
+        {/* Subtle decorative stamp */}
+        <div className="absolute top-6 right-6 opacity-30 pointer-events-none">
+          <div className="rubber-stamp-navy text-[10px] scale-90">
+            FORMATION
+          </div>
+        </div>
+
         <div className="text-center mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-3 shadow-sm shadow-indigo-100">
+          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#1557D6] border border-blue-200/60 flex items-center justify-center mx-auto mb-3 shadow-2xs">
             <FolderPlus className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Create Project Group
+          <h1 className="text-2xl font-black font-editorial text-[#172033] tracking-tight">
+            Create Project Squad
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Establish a collaborative team for academic coursework and assignment submissions.
+          <p className="text-xs text-[#5A6578] mt-1.5 max-w-sm mx-auto leading-relaxed">
+            Establish a collaborative team for academic coursework, mutual code reviews, and assignment submissions.
           </p>
         </div>
 
-        {/* Informational pill */}
-        <div className="mb-5 p-3 rounded-xl bg-indigo-50/70 border border-indigo-100 flex items-start gap-2.5 text-indigo-700 text-xs">
-          <CheckCircle className="w-4 h-4 text-indigo-600 flex-shrink-0 mt-0.5" />
-          <span>
-            You will automatically become the <strong>Group Leader</strong>. You can invite other students right after creating the group.
-          </span>
+        {/* Informational sticky-like note */}
+        <div className="mb-6 p-4 rounded-xl bg-[#FAF8F5] border border-[#E5E0D8] flex items-start gap-3 text-xs text-[#172033]">
+          <CheckCircle className="w-4 h-4 text-[#1557D6] flex-shrink-0 mt-0.5" />
+          <div className="space-y-0.5">
+            <p className="font-bold text-[#172033]">Leader Delegation</p>
+            <p className="text-[#5A6578] leading-relaxed">
+              You will automatically become the <span className="font-bold text-[#1557D6]">Team Leader</span> with permissions to manage membership and verify submissions.
+            </p>
+          </div>
         </div>
 
         {/* Error Alert */}
@@ -89,10 +102,10 @@ export const CreateGroupPage = () => {
         )}
 
         {/* Creation Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
-              Group / Team Name
+            <label className="block text-xs font-mono font-bold text-[#172033] uppercase tracking-wider mb-2">
+              Squad / Team Title
             </label>
             <input
               type="text"
@@ -102,33 +115,36 @@ export const CreateGroupPage = () => {
                 setName(e.target.value);
                 setErrorMessage(null);
               }}
-              placeholder="e.g. Distributed Consensus Lab Team 4"
-              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all"
+              placeholder="e.g. Distributed Systems Squad 4"
+              className="w-full px-4 py-3 bg-[#FAF8F5] border border-[#D9D5CA] rounded-xl text-sm text-[#172033] placeholder-[#8A7E72] focus:outline-none focus:ring-2 focus:ring-[#1557D6]/20 focus:border-[#1557D6] transition-all font-medium"
             />
+            <p className="text-[11px] text-[#8A7E72] font-handwritten mt-1.5 ml-1">
+              Choose a distinct, identifiable moniker for your cohort.
+            </p>
           </div>
 
-          <div className="pt-2 flex items-center gap-3">
+          <div className="pt-3 flex items-center gap-3">
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-sm transition-all shadow-md shadow-indigo-100 disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer"
+              className="flex-1 py-3 px-5 rounded-xl bg-[#1557D6] hover:bg-[#0D3EA8] active:bg-[#0A2E80] text-white font-bold text-xs uppercase tracking-wider transition-all shadow-sm disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer font-mono"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Creating Team...</span>
+                  <span>Registering Squad...</span>
                 </>
               ) : (
                 <>
                   <Users className="w-4 h-4" />
-                  <span>Create Group</span>
+                  <span>Form Group</span>
                 </>
               )}
             </button>
 
             <Link
               to="/student/groups"
-              className="py-2.5 px-4 rounded-xl border border-slate-200 text-slate-700 font-bold text-sm hover:bg-slate-50 transition-colors text-center"
+              className="py-3 px-5 rounded-xl border border-[#D9D5CA] text-[#5A6578] font-bold text-xs uppercase tracking-wider hover:bg-[#FAF8F5] hover:text-[#172033] transition-colors text-center font-mono"
             >
               Cancel
             </Link>
@@ -140,3 +156,4 @@ export const CreateGroupPage = () => {
 };
 
 export default CreateGroupPage;
+

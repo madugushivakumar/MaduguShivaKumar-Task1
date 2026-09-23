@@ -12,11 +12,9 @@ import {
   CheckCircle2,
   Layers,
   ArrowLeft,
-  Filter,
 } from 'lucide-react';
-import PhaseBadge from '../components/common/PhaseBadge';
 import ProgressBar from '../components/common/ProgressBar';
-import StatusBadge from '../components/common/StatusBadge';
+import { SearchBar, EmptyState } from '../components/ui';
 
 export const AdminGroupListPage = () => {
   const [groups, setGroups] = useState([]);
@@ -61,115 +59,117 @@ export const AdminGroupListPage = () => {
       <div className="flex items-center justify-between">
         <Link
           to="/admin/dashboard"
-          className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-indigo-600 transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-mono font-bold text-[#5A6578] hover:text-[#1557D6] transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to Admin Dashboard</span>
+          <span>Back to Control Wall</span>
         </Link>
-        <PhaseBadge phase="Phase 7" status="Group Monitoring" />
+        <span className="text-[11px] font-mono font-bold text-[#1557D6] bg-blue-50/80 px-2.5 py-0.5 rounded-full border border-blue-200/60 uppercase">
+          COHORT TELEMETRY
+        </span>
       </div>
 
       {/* Banner */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800">
+      <div className="paper-card bg-[#FAF8F5] rounded-3xl p-6 sm:p-8 border border-[#D9D5CA] shadow-sm relative overflow-hidden">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-400/30">
-                Professor / Admin Portal
+              <span className="text-[11px] font-mono font-bold text-[#1557D6] bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200/60 uppercase tracking-wider">
+                FACULTY MONITORING
+              </span>
+              <span className="text-xs font-handwritten text-[#8A7E72] text-sm">
+                Squad performance matrix
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              Group Progress Monitoring
+            <h1 className="text-3xl sm:text-4xl font-black font-editorial tracking-tight text-[#172033]">
+              Group Progress & Telemetry
             </h1>
-            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Track real-time coursework completion rates across all student project teams. Monitor
-              submission progress, assigned workload, and member participation.
+            <p className="text-xs sm:text-sm text-[#5A6578] max-w-2xl leading-relaxed">
+              Track real-time coursework completion rates across all student project teams. Monitor submission progress, assigned workload, and member participation.
             </p>
           </div>
 
           <button
             onClick={fetchGroups}
             disabled={loading}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-indigo-200 border border-slate-700 text-xs font-semibold self-start md:self-auto transition-all"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-[#FAF8F5] text-[#172033] border border-[#D9D5CA] text-xs font-mono font-bold self-start md:self-auto transition-all shadow-2xs cursor-pointer"
             title="Refresh groups feed"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            <span>Refresh</span>
+            <RefreshCw className={`w-4 h-4 text-[#1557D6] ${loading ? 'animate-spin' : ''}`} />
+            <span>Sync Telemetry</span>
           </button>
         </div>
 
         {/* Aggregate KPI Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-slate-800/80 text-xs">
-          <div className="bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50">
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Total Teams</span>
-            <span className="text-xl font-black text-white mt-0.5 block">{totalGroups}</span>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-6 border-t border-[#E5E0D8] text-xs">
+          <div className="bg-white/80 p-3.5 rounded-xl border border-[#D9D5CA]">
+            <span className="text-[#8A7E72] block text-[10px] font-mono font-bold uppercase tracking-wider">Total Teams</span>
+            <span className="text-2xl font-black font-mono text-[#172033] mt-0.5 block">{totalGroups}</span>
           </div>
-          <div className="bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50">
-            <span className="text-emerald-400 block text-[10px] uppercase font-semibold">100% Completed</span>
-            <span className="text-xl font-black text-emerald-300 mt-0.5 block">{completedGroups}</span>
+          <div className="bg-white/80 p-3.5 rounded-xl border border-[#D9D5CA]">
+            <span className="text-emerald-700 block text-[10px] font-mono font-bold uppercase tracking-wider">100% Completed</span>
+            <span className="text-2xl font-black font-mono text-emerald-700 mt-0.5 block">{completedGroups}</span>
           </div>
-          <div className="bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50">
-            <span className="text-indigo-400 block text-[10px] uppercase font-semibold">In Progress</span>
-            <span className="text-xl font-black text-indigo-300 mt-0.5 block">{inProgressGroups}</span>
+          <div className="bg-white/80 p-3.5 rounded-xl border border-[#D9D5CA]">
+            <span className="text-[#1557D6] block text-[10px] font-mono font-bold uppercase tracking-wider">In Progress</span>
+            <span className="text-2xl font-black font-mono text-[#1557D6] mt-0.5 block">{inProgressGroups}</span>
           </div>
-          <div className="bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50">
-            <span className="text-slate-400 block text-[10px] uppercase font-semibold">Not Started / Empty</span>
-            <span className="text-xl font-black text-slate-300 mt-0.5 block">{notStartedGroups}</span>
+          <div className="bg-white/80 p-3.5 rounded-xl border border-[#D9D5CA]">
+            <span className="text-[#8A7E72] block text-[10px] font-mono font-bold uppercase tracking-wider">Not Started</span>
+            <span className="text-2xl font-black font-mono text-[#5A6578] mt-0.5 block">{notStartedGroups}</span>
           </div>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-4">
+      <div className="paper-card bg-white rounded-2xl border border-[#D9D5CA] p-4 shadow-2xs space-y-4">
         <div className="flex flex-col md:flex-row gap-3 items-center justify-between">
-          <div className="relative w-full md:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              placeholder="Search groups by name..."
+          <div className="w-full md:w-80">
+            <SearchBar
+              placeholder="Search groups by squad title..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500"
+              onClear={() => setSearchQuery('')}
             />
           </div>
 
-          <div className="inline-flex bg-slate-100 p-1 rounded-xl w-full md:w-auto overflow-x-auto">
+          <div className="inline-flex bg-[#FAF8F5] p-1 rounded-xl border border-[#D9D5CA] w-full md:w-auto overflow-x-auto">
             <button
               onClick={() => setStatusFilter('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
                 statusFilter === 'ALL'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-[#1557D6] shadow-2xs'
+                  : 'text-[#5A6578] hover:text-[#172033]'
               }`}
             >
               All ({totalGroups})
             </button>
             <button
               onClick={() => setStatusFilter('COMPLETED')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
                 statusFilter === 'COMPLETED'
-                  ? 'bg-white text-emerald-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-emerald-700 shadow-2xs'
+                  : 'text-[#5A6578] hover:text-[#172033]'
               }`}
             >
               Completed
             </button>
             <button
               onClick={() => setStatusFilter('IN_PROGRESS')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
                 statusFilter === 'IN_PROGRESS'
-                  ? 'bg-white text-indigo-600 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-[#1557D6] shadow-2xs'
+                  : 'text-[#5A6578] hover:text-[#172033]'
               }`}
             >
               In Progress
             </button>
             <button
               onClick={() => setStatusFilter('NOT_STARTED')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
                 statusFilter === 'NOT_STARTED'
-                  ? 'bg-white text-slate-700 shadow-sm'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-[#172033] shadow-2xs'
+                  : 'text-[#5A6578] hover:text-[#172033]'
               }`}
             >
               Not Started
@@ -180,89 +180,87 @@ export const AdminGroupListPage = () => {
 
       {/* Loading state */}
       {loading && (
-        <div className="py-16 text-center space-y-3 bg-white rounded-3xl border border-slate-200">
-          <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm font-semibold text-slate-600">
-            Querying group progress metrics...
+        <div className="py-16 text-center space-y-3 bg-white rounded-3xl border border-[#D9D5CA] paper-card">
+          <div className="w-10 h-10 border-4 border-[#1557D6] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-mono font-bold uppercase tracking-wider text-[#5A6578]">
+            Querying cohort progress metrics...
           </p>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && groups.length === 0 && (
-        <div className="py-16 text-center space-y-3 bg-white rounded-3xl border border-slate-200 p-8 shadow-sm">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto">
-            <Users className="w-8 h-8" />
-          </div>
-          <h3 className="text-base font-bold text-slate-900">No Groups Found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            {searchQuery || statusFilter !== 'ALL'
+        <EmptyState
+          icon={Users}
+          title="No Groups Found"
+          description={
+            searchQuery || statusFilter !== 'ALL'
               ? 'No groups match your active search or status filters.'
-              : 'There are currently no student project groups registered in the system.'}
-          </p>
-        </div>
+              : 'There are currently no student project groups registered in the system.'
+          }
+        />
       )}
 
       {/* Responsive Table / Cards */}
       {!loading && groups.length > 0 && (
-        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="paper-card bg-white rounded-3xl border border-[#D9D5CA] shadow-2xs overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-4 px-6">Group Name</th>
-                  <th className="py-4 px-4">Members</th>
-                  <th className="py-4 px-4">Assigned Work</th>
+                <tr className="bg-[#FAF8F5] border-b border-[#D9D5CA] text-[10px] font-mono font-bold text-[#8A7E72] uppercase tracking-wider">
+                  <th className="py-4 px-6">Group Moniker</th>
+                  <th className="py-4 px-4">Cadre</th>
+                  <th className="py-4 px-4">Assigned Briefs</th>
                   <th className="py-4 px-4">Completed</th>
                   <th className="py-4 px-4">Pending</th>
-                  <th className="py-4 px-6 min-w-[200px]">Progress</th>
+                  <th className="py-4 px-6 min-w-[200px]">Submission Pace</th>
                   <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 text-xs">
+              <tbody className="divide-y divide-[#E5E0D8] text-xs">
                 {groups.map((g) => (
-                  <tr key={g.groupId} className="hover:bg-slate-50/70 transition-colors">
+                  <tr key={g.groupId} className="hover:bg-[#FAF8F5]/60 transition-colors">
                     {/* Group Name & Creator */}
                     <td className="py-4 px-6">
                       <div>
                         <Link
                           to={`/admin/groups/${g.groupId}`}
-                          className="font-bold text-slate-900 hover:text-indigo-600 transition-colors text-sm"
+                          className="font-bold text-[#172033] hover:text-[#1557D6] transition-colors font-editorial text-base"
                         >
                           {g.groupName}
                         </Link>
-                        <span className="block text-[11px] text-slate-400 mt-0.5">
-                          Created by {g.creatorName}
+                        <span className="block text-[11px] text-[#8A7E72] font-mono mt-0.5">
+                          Lead: {g.creatorName}
                         </span>
                       </div>
                     </td>
 
                     {/* Member Count */}
-                    <td className="py-4 px-4 font-semibold text-slate-700">
-                      <span className="inline-flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5 text-indigo-500" />
+                    <td className="py-4 px-4 font-mono font-bold text-[#172033]">
+                      <span className="inline-flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5 text-[#1557D6]" />
                         <span>{g.memberCount}</span>
                       </span>
                     </td>
 
                     {/* Total Assigned */}
-                    <td className="py-4 px-4 font-semibold text-slate-700">
-                      <span className="inline-flex items-center gap-1">
-                        <BookOpen className="w-3.5 h-3.5 text-slate-400" />
+                    <td className="py-4 px-4 font-mono font-bold text-[#172033]">
+                      <span className="inline-flex items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-[#8A7E72]" />
                         <span>{g.totalAssignments}</span>
                       </span>
                     </td>
 
                     {/* Completed */}
-                    <td className="py-4 px-4">
-                      <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                    <td className="py-4 px-4 font-mono">
+                      <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                         {g.completedAssignments}
                       </span>
                     </td>
 
                     {/* Pending */}
-                    <td className="py-4 px-4">
-                      <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
+                    <td className="py-4 px-4 font-mono">
+                      <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
                         {g.pendingAssignments}
                       </span>
                     </td>
@@ -282,7 +280,7 @@ export const AdminGroupListPage = () => {
                     <td className="py-4 px-6 text-right">
                       <Link
                         to={`/admin/groups/${g.groupId}`}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 text-indigo-600 font-bold transition-all text-xs"
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#FAF8F5] hover:bg-blue-50 text-[#1557D6] border border-[#D9D5CA] font-mono font-bold transition-all text-xs"
                       >
                         <span>Inspect</span>
                         <ArrowRight className="w-3 h-3" />
@@ -300,3 +298,4 @@ export const AdminGroupListPage = () => {
 };
 
 export default AdminGroupListPage;
+

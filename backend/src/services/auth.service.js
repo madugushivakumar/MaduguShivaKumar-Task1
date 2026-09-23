@@ -51,7 +51,7 @@ class AuthService {
    * @param {string} param0.studentId
    * @returns {Promise<{user: object, token: string}>}
    */
-  async registerStudent({ name, email, password, studentId }) {
+  async registerStudent({ name, email, password, studentId = null, role = 'STUDENT' }) {
     // 1. Check duplicate email
     const existingEmailUser = await userRepository.findByEmail(email);
     if (existingEmailUser) {
@@ -61,25 +61,28 @@ class AuthService {
       );
     }
 
-    // 2. Check duplicate student ID
-    const existingStudentIdUser = await userRepository.findByStudentId(studentId);
-    if (existingStudentIdUser) {
-      throw new ApiError(
-        HTTP_STATUS.CONFLICT,
-        'A student account with this student ID already exists.'
-      );
+    // 2. Check duplicate student ID if studentId provided
+    if (studentId) {
+      const existingStudentIdUser = await userRepository.findByStudentId(studentId);
+      if (existingStudentIdUser) {
+        throw new ApiError(
+          HTTP_STATUS.CONFLICT,
+          'A student account with this student ID already exists.'
+        );
+      }
     }
 
     // 3. Hash password
     const passwordHash = await bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
 
-    // 4. Create user record with strictly enforced STUDENT role
+    // 4. Create user record with validated role (STUDENT or PROFESSOR)
+    const targetRole = role === 'PROFESSOR' ? 'PROFESSOR' : 'STUDENT';
     const createdUser = await userRepository.create({
       name,
       email,
       passwordHash,
-      role: 'STUDENT',
-      studentId,
+      role: targetRole,
+      studentId: targetRole === 'STUDENT' ? studentId : (studentId || null),
     });
 
     const safeUser = this.sanitizeUser(createdUser);

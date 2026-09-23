@@ -2,10 +2,11 @@ import api from './api';
 
 export const assignmentService = {
   /**
-   * List all managed assignments (Admin)
+   * List all managed assignments (Admin/Professor)
+   * @param {object} [params] - Optional query filters (course_id, submission_type)
    */
-  async getAssignments() {
-    const response = await api.get('/assignments');
+  async getAssignments(params = {}) {
+    const response = await api.get('/assignments', { params });
     return response.data;
   },
 

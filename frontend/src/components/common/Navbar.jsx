@@ -27,16 +27,22 @@ export const Navbar = () => {
     navigate('/login');
   };
 
+  const isFaculty = user?.role === 'ADMIN' || user?.role === 'PROFESSOR';
+
   const navItems = [
     { name: 'Home', to: '/', icon: Layers },
     ...(isAuthenticated
       ? [
           {
-            name: user.role === 'ADMIN' ? 'Admin Portal' : 'Student Portal',
-            to: user.role === 'ADMIN' ? '/admin/dashboard' : '/student/dashboard',
+            name: isFaculty
+              ? user?.role === 'PROFESSOR'
+                ? 'Professor Portal'
+                : 'Admin Portal'
+              : 'Student Portal',
+            to: isFaculty ? '/admin/dashboard' : '/student/dashboard',
             icon: LayoutDashboard,
           },
-          ...(user.role === 'ADMIN'
+          ...(isFaculty
             ? [
                 {
                   name: 'Coursework',
@@ -47,7 +53,7 @@ export const Navbar = () => {
                   name: 'Group Progress',
                   to: '/admin/groups',
                   icon: Users,
-                  badge: 'Phase 7',
+                  badge: 'Active',
                 },
                 {
                   name: 'Submissions',
@@ -56,7 +62,7 @@ export const Navbar = () => {
                 },
               ]
             : []),
-          ...(user.role === 'STUDENT'
+          ...(user?.role === 'STUDENT'
             ? [
                 {
                   name: 'My Groups',
@@ -68,7 +74,7 @@ export const Navbar = () => {
                   name: 'Coursework',
                   to: '/student/assignments',
                   icon: BookOpen,
-                  badge: 'Phase 6',
+                  badge: 'Active',
                 },
               ]
             : []),
@@ -136,10 +142,10 @@ export const Navbar = () => {
             {isAuthenticated ? (
               <div className="flex items-center gap-3">
                 <Link
-                  to={user.role === 'ADMIN' ? '/admin/dashboard' : '/student/dashboard'}
+                  to={isFaculty ? '/admin/dashboard' : '/student/dashboard'}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-800 transition-all"
                 >
-                  {user.role === 'ADMIN' ? (
+                  {isFaculty ? (
                     <Shield className="w-4 h-4 text-indigo-600" />
                   ) : (
                     <GraduationCap className="w-4 h-4 text-indigo-600" />
@@ -147,7 +153,9 @@ export const Navbar = () => {
                   <span className="text-xs font-bold">{user.name}</span>
                   <span
                     className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full uppercase ${
-                      user.role === 'ADMIN'
+                      user.role === 'PROFESSOR'
+                        ? 'bg-purple-100 text-purple-800'
+                        : user.role === 'ADMIN'
                         ? 'bg-amber-100 text-amber-800'
                         : 'bg-indigo-100 text-indigo-800'
                     }`}
@@ -203,7 +211,7 @@ export const Navbar = () => {
           {isAuthenticated && (
             <div className="p-3 bg-slate-50 rounded-xl flex items-center justify-between border border-slate-200">
               <div className="flex items-center gap-2.5">
-                {user.role === 'ADMIN' ? (
+                {isFaculty ? (
                   <Shield className="w-5 h-5 text-indigo-600" />
                 ) : (
                   <GraduationCap className="w-5 h-5 text-indigo-600" />
@@ -215,7 +223,9 @@ export const Navbar = () => {
               </div>
               <span
                 className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
-                  user.role === 'ADMIN'
+                  user.role === 'PROFESSOR'
+                    ? 'bg-purple-100 text-purple-800'
+                    : user.role === 'ADMIN'
                     ? 'bg-amber-100 text-amber-800'
                     : 'bg-indigo-100 text-indigo-800'
                 }`}

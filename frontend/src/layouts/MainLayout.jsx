@@ -1,17 +1,29 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
-import Navbar from '../components/common/Navbar';
-import Footer from '../components/common/Footer';
+import { Outlet, useLocation } from 'react-router-dom';
+import AppShell from '../components/layout/AppShell';
 
 export const MainLayout = () => {
-  return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-800">
-      <Navbar />
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  const location = useLocation();
+
+  // Auth pages and Landing Page render in full-width canvas
+  const isFullWidthPage =
+    location.pathname === '/' ||
+    location.pathname === '/login' ||
+    location.pathname === '/register';
+
+  if (isFullWidthPage) {
+    return (
+      <div className="min-h-screen bg-[#F5F1E8] text-[#172033] antialiased font-sans selection:bg-[#1557D6] selection:text-white">
         <Outlet />
-      </main>
-      <Footer />
-    </div>
+      </div>
+    );
+  }
+
+  // All internal application views use the reference AppShell
+  return (
+    <AppShell>
+      <Outlet />
+    </AppShell>
   );
 };
 
